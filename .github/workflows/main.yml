@@ -1,0 +1,43 @@
+name: Check SSH Keys
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  check-ssh-keys:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set Permissions for Private Key One
+        run: |
+          echo "${{ secrets.private_key_one }}" > private_key_one
+          chmod 400 private_key_one
+
+      - name: Set Permissions for Private Key Two
+        run: |
+          echo "${{ secrets.private_key_two }}" > private_key_two
+          chmod 400 private_key_two
+          
+      - name: Verify type of key1
+        run: ssh-keygen -l -f ./keys/task1/key.pub | grep RSA
+        
+      - name: Verify lenght of key1
+        run: ssh-keygen -l -f ./keys/task1/key.pub | grep 2048
+     
+      - name: Check if private key does match the public key for task1
+        run: |
+          generated_key=$(ssh-keygen -y -f private_key_one | cut -d' ' -f 2)
+          cat ./keys/task1/key.pub | grep $generated_key
+
+      - name: Verify type of key2
+        run: ssh-keygen -l -f ./keys/task2/key.pub | grep ED25519
+     
+      - name: Check if private key does match the public key for task2
+        run: |
+          generated_key=$(ssh-keygen -y -f private_key_two | cut -d' ' -f 2)
+          cat ./keys/task2/key.pub | grep $generated_key
